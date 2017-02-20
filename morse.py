@@ -10,7 +10,7 @@ CONFIG = {
     "broker": "nodered.dynamicdevices.co.uk",
     "sensor_pin": 0, 
     "client_id": b"esp8266_" + ubinascii.hexlify(machine.unique_id()),
-    "topic": "home",
+    "topic": "morsetweeter",
 }
 
 CODE = {'A': '.-',     'B': '-...',   'C': '-.-.', 
@@ -149,14 +149,13 @@ def main():
     client = MQTTClient(CONFIG['client_id'], CONFIG['broker'])
     client.connect()
     print("Connected to {}".format(CONFIG['broker']))
-    while True:
-        print("Publishing to {}".format(CONFIG['topic']))
-        datastr = "ts=" + str(utime.ticks_ms()) + "&val=" + message
-        client.publish('{}/{}'.format(CONFIG['topic'],
+    
+    print("Publishing to {}".format(CONFIG['topic']))
+    datastr = "ts=" + str(utime.ticks_ms()) + "&val=" + message
+    client.publish('{}/{}'.format(CONFIG['topic'],
                                         CONFIG['client_id']),
                                         bytes(datastr, 'utf-8'))
-        time.sleep(5)
-#client.disconnect()
+    client.disconnect()
 
 if __name__ == '__main__':
     main()
