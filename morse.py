@@ -1,5 +1,17 @@
+import webrepl
 import sys
 import utime
+import time
+import ubinascii
+import machine
+from umqtt.simple import MQTTClient
+
+CONFIG = {
+    "broker": "nodered.dynamicdevices.co.uk",
+    "sensor_pin": 0, 
+    "client_id": b"esp8266_" + ubinascii.hexlify(machine.unique_id()),
+    "topic": "home",
+}
 
 CODE = {'A': '.-',     'B': '-...',   'C': '-.-.', 
         'D': '-..',    'E': '.',      'F': '..-.',
@@ -25,6 +37,8 @@ ELEMENT_PAUSE_LENGTH_MS = DOT_LENGTH_MS
 CHARACTER_PAUSE_LENGTH_MS = 3*DOT_LENGTH_MS
 WORD_PAUSE_LENGTH_MS = 7*DOT_LENGTH_MS
 
+client = None
+
 #
 # Finds the appropriate character for a morse string of dots and dashes
 # 
@@ -40,31 +54,26 @@ def char_for_morse( morse ):
 # 
 def write_morse( message ):
 
-    time = 1234;
+    time = 0;
     
     # Open the file
     fwrite = open(FILENAME, "w")
     for char in message:
         # Inter character delay
-#        utime.sleep_ms(CHARACTER_PAUSE_LENGTH_MS)
         time += CHARACTER_PAUSE_LENGTH_MS
-        print(char)
+        print(str(time) + " " + char)
         if char == ' ':           
-            print('SPACE')
-#            utime.sleep_ms(WORD_PAUSE_LENGTH_MS)
+            print(' ')
             time += WORD_PAUSE_LENGTH_MS
         else:
             morse = CODE[char]
-#            print(morse)
             for char2 in morse:
                 # Write ON
                 fwrite.write(str(time) + ",1\n")
                 # Do DOT or DASH
                 if(char2 == '.'):
-#                    utime.sleep_ms(DOT_LENGTH_MS)
                     time += DOT_LENGTH_MS
                 if(char2 == '-'):
-#                    utime.sleep_ms(DASH_LENGTH_MS)
                     time += DASH_LENGTH_MS
                 # Write OFF
                 fwrite.write(str(time) + ",0\n")
@@ -79,6 +88,7 @@ def write_morse( message ):
 #
 def read_morse():
     tstart = -1;
+    message = ""
     morsein = ""
     with open(FILENAME) as f:
       for line in f:
@@ -105,13 +115,12 @@ def read_morse():
                 print(char_for_morse(morsein))
                 morsein = ""
                 print(' ')
+                message += ' '
             elif(tdelta >= CHARACTER_PAUSE_LENGTH_MS):
                 print(char_for_morse(morsein))
+                message += char_for_morse(morsein)
                 morsein = ""
-#            else:
-#                print('*')
         else:
-#            print('is0')
             # Finished a dot or a dash
             if(tdelta >= DASH_LENGTH_MS):
                 # Dash
@@ -121,10 +130,33 @@ def read_morse():
 #                print('.')
                 morsein += '.'
     print(char_for_morse(morsein))
+    message += char_for_morse(morsein)
     f.close()
+    return message
 
-print("Writing")
-write_morse("PARIS HILTON")
-print("")
-print("Reading")
-read_morse()
+def main():
+
+    print("Writing")
+    write_morse("PARIS")
+
+    print("")
+
+    print("Reading")
+    message = read_morse()
+    print("Got: " + message)
+
+    print("Connecting")
+    client = MQTTClient(CONFIG['client_id'], CONFIG['broker'])
+    client.connect()
+    print("Connected to {}".format(CONFIG['broker']))
+    while True:
+        print("Publishing to {}".format(CONFIG['topic']))
+        datastr = "ts=" + str(utime.ticks_ms()) + "&val=" + message
+        client.publish('{}/{}'.format(CONFIG['topic'],
+                                        CONFIG['client_id']),
+                                        bytes(datastr, 'utf-8'))
+        time.sleep(5)
+#client.disconnect()
+
+if __name__ == '__main__':
+    main()
