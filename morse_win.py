@@ -50,9 +50,9 @@ def write_morse( message ):
     for char in message:
         # Inter character delay
         time += CHARACTER_PAUSE_LENGTH_MS
-        print(char)
+        sys.stdout.write(char)
+        sys.stdout.flush()
         if char == ' ':           
-            print('SPACE')
             time += WORD_PAUSE_LENGTH_MS
         else:
             morse = CODE[char]
@@ -102,25 +102,30 @@ def read_morse():
             # - after a character
             # - after a word
             if(tdelta >= WORD_PAUSE_LENGTH_MS):
-                print(char_for_morse(morsein))
+                sys.stdout.write(char_for_morse(morsein))
+                sys.stdout.flush()
                 morsein = ""
-                print(' ')
+                sys.stdout.write(' ')
+                sys.stdout.flush()
             elif(tdelta >= CHARACTER_PAUSE_LENGTH_MS):
-                print(char_for_morse(morsein))
+                sys.stdout.write(char_for_morse(morsein))
+                sys.stdout.flush()
                 morsein = ""
 #            else:
 #                print('*')
         else:
-#            print('is0')
             # Finished a dot or a dash
             if(tdelta >= DASH_LENGTH_MS):
                 # Dash
 #                print('-')
+		winsound.Beep(MORSE_FREQUENCY, DASH_LENGTH_MS)
                 morsein += '-'
             else:
 #                print('.')
+		winsound.Beep(MORSE_FREQUENCY, DOT_LENGTH_MS)
                 morsein += '.'
-    print(char_for_morse(morsein))
+    sys.stdout.write(char_for_morse(morsein))
+    sys.stdout.flush()
     f.close()
 
 print("Morse Encoding/Decoding Test")
@@ -130,10 +135,10 @@ message = "PARIS"
 if(len(sys.argv) > 1):
     message = sys.argv[1]
 
-print("Writing: " + message)
+sys.stdout.write("Writing: ")
 write_morse(message)
 
 print("")
 
-print("Reading")
+sys.stdout.write("Reading: ")
 read_morse()
