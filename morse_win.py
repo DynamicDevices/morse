@@ -133,7 +133,7 @@ print("")
 
 message = "PARIS"
 if(len(sys.argv) > 1):
-    message = sys.argv[1]
+    message = sys.argv[1].upper()
 
 sys.stdout.write("Writing: ")
 write_morse(message)
