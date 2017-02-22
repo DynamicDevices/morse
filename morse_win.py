@@ -26,6 +26,9 @@ ELEMENT_PAUSE_LENGTH_MS = DOT_LENGTH_MS
 CHARACTER_PAUSE_LENGTH_MS = 3*DOT_LENGTH_MS
 WORD_PAUSE_LENGTH_MS = 7*DOT_LENGTH_MS
 
+BEEP_DOT_LENGTH_MS = 150
+BEEP_DASH_LENGTH_MS = 3*BEEP_DOT_LENGTH_MS
+
 MORSE_FREQUENCY = 750
 
 #
@@ -62,10 +65,10 @@ def write_morse( message ):
                 fwrite.write(str(time) + ",1\n")
                 # Do DOT or DASH
                 if(char2 == '.'):
-               	    winsound.Beep(MORSE_FREQUENCY, DOT_LENGTH_MS)
+               	    winsound.Beep(MORSE_FREQUENCY, BEEP_DOT_LENGTH_MS)
                     time += DOT_LENGTH_MS
                 if(char2 == '-'):
-               	    winsound.Beep(MORSE_FREQUENCY, DASH_LENGTH_MS)
+               	    winsound.Beep(MORSE_FREQUENCY, BEEP_DASH_LENGTH_MS)
                     time += DASH_LENGTH_MS
                 # Write OFF
                 fwrite.write(str(time) + ",0\n")
@@ -118,11 +121,11 @@ def read_morse():
             if(tdelta >= DASH_LENGTH_MS):
                 # Dash
 #                print('-')
-		winsound.Beep(MORSE_FREQUENCY, DASH_LENGTH_MS)
+		winsound.Beep(MORSE_FREQUENCY, BEEP_DASH_LENGTH_MS)
                 morsein += '-'
             else:
 #                print('.')
-		winsound.Beep(MORSE_FREQUENCY, DOT_LENGTH_MS)
+		winsound.Beep(MORSE_FREQUENCY, BEEP_DOT_LENGTH_MS)
                 morsein += '.'
     sys.stdout.write(char_for_morse(morsein))
     sys.stdout.flush()
